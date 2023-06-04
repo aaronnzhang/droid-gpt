@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.example.droidchat
 
 import org.junit.Test
 
