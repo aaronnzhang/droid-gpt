@@ -7,39 +7,45 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.droidchat.component.DroidChatAppBar
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun ChatScreen() {
     var text by remember { mutableStateOf("") }
     val messages = remember { mutableStateListOf<Message>() }
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Chat Screen") }) }
+        topBar = { DroidChatAppBar(title = { Text("Droid Chat") }) }
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                this.items(messages) { message ->
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                state = listState
+            ) {
+                items(messages) { message ->
                     MessageView(message)
                 }
             }
@@ -48,10 +54,11 @@ fun ChatScreen() {
                     .fillMaxWidth()
                     .padding(8.dp)
             ) {
-                TextField(
+                OutlinedTextField(
                     value = text,
                     onValueChange = { text = it },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    label = { Text("Type a message") }
                 )
                 Button(
                     onClick = {
@@ -59,10 +66,18 @@ fun ChatScreen() {
                         text = ""
                         // TODO: Send text to GPT-3 and get response
                     },
-                    modifier = Modifier.padding(start = 8.dp)
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .align(Alignment.CenterVertically)
                 ) {
                     Text("Send")
                 }
+            }
+        }
+
+        LaunchedEffect(messages.size) {
+            coroutineScope.launch {
+                listState.animateScrollToItem(0)
             }
         }
     }
